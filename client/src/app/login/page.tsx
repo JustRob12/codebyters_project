@@ -78,38 +78,33 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white">
       <Header />
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-      {/* Left side with logo */}
-      <div className="hidden lg:flex lg:w-1/2 bg-white items-center justify-center min-h-[calc(100vh-4rem)]">
-        <div className="text-center">
-          <Image
-            src="/codebyterslogo.png"
-            alt="Codebyters Logo"
-            width={350}
-            height={350}
-            className="mx-auto mb-10"
-          />
-         
-          
+    {/* Left side with welcome message */}
+    <div className="hidden lg:flex lg:w-1/2 bg-white items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="text-left max-w-lg">
+          <h1 className="mb-6 text-black">
+            <div className="text-3xl font-medium font-semibold">Welcome to</div>
+            <div className="text-8xl font-bold" style={{ color: '#20B2AA' }}>CODEBYTERS</div>
+          </h1>
+          <p className="text-xl text-gray-600 leading-relaxed">
+            Where IT minds connect, learn, and grow together into future innovators.
+            innovators.
+          </p>
         </div>
       </div>
 
       {/* Right side with login form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 lg:pl-16">
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-lg mx-auto">
           <div className="text-center mb-8 lg:hidden">
-            <Image
-              src="/codebyterslogo.png"
-              alt="Codebyters Logo"
-              width={120}
-              height={120}
-              className="mx-auto mb-4"
-            />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-green-600 bg-clip-text text-transparent">
-              Codebyters
+            <h1 className="text-3xl font-bold mb-4">
+              Welcome to <span style={{ color: '#20B2AA' }}>CodeByters!</span>
             </h1>
+            <p className="text-sm text-gray-600">
+              Where IT minds connect, learn, and grow together into future innovators.
+            </p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
             <p className="text-gray-600 mb-6 sm:mb-8">Sign in to your account</p>
 

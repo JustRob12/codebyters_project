@@ -2,21 +2,10 @@
 
 import StudentHeader from '@/components/StudentHeader';
 import Header from '@/components/Header';
-import LeftColumn from '@/components/LeftColumn';
-import MiddleColumn from '@/components/MiddleColumn';
-import RightColumn from '@/components/RightColumn';
+import ViewEventsStudent from '@/components/ViewEventsStudent';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-
-interface User {
-  id: number;
-  first_name: string;
-  last_name: string;
-  middle_initial: string;
-  profile_picture: string;
-  created_at: string;
-}
 
 interface Event {
   id: number;
@@ -32,9 +21,7 @@ interface Event {
   }>;
 }
 
-export default function Dashboard() {
-  const [user, setUser] = useState<any>(null);
-  const [newUsers, setNewUsers] = useState<User[]>([]);
+export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -48,11 +35,7 @@ export default function Dashboard() {
     try {
       const userData = localStorage.getItem('user');
       if (userData) {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
         setIsAuthenticated(true);
-        // Fetch other data only if authenticated
-        fetchNewUsers();
         fetchEvents();
       } else {
         setIsAuthenticated(false);
@@ -62,23 +45,6 @@ export default function Dashboard() {
       console.error('Error checking authentication:', error);
       setIsAuthenticated(false);
       router.push('/login');
-    }
-  };
-
-
-  const fetchNewUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, first_name, last_name, middle_initial, profile_picture, created_at')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setNewUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching new users:', error);
     }
   };
 
@@ -95,8 +61,7 @@ export default function Dashboard() {
           )
         `)
         .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .order('event_date', { ascending: true });
 
       if (eventsError) throw eventsError;
 
@@ -121,7 +86,7 @@ export default function Dashboard() {
         <div className="pt-16 flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">Please log in to access the dashboard.</p>
+            <p className="text-gray-600 mb-6">Please log in to view events.</p>
             <button
               onClick={() => router.push('/login')}
               className="bg-[#20B2AA] text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity"
@@ -139,12 +104,8 @@ export default function Dashboard() {
       <StudentHeader />
       
       <div className="pt-0">
-        <div className="w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12">
-            <LeftColumn user={user} />
-            <MiddleColumn user={user} events={events} loading={loading} />
-            <RightColumn newUsers={newUsers} />
-          </div>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <ViewEventsStudent events={events} loading={loading} />
         </div>
       </div>
     </div>

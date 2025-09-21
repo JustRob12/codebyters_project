@@ -2,6 +2,7 @@
 
 import StudentHeader from '@/components/StudentHeader';
 import ImageCropModal from '@/components/ImageCropModal';
+import SocialMediaSection from '@/components/SocialMediaSection';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -45,25 +46,35 @@ export default function ProfilePage() {
 
     setIsUploading(true);
     try {
-      // Upload to Cloudinary
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'images');
+      console.log('Starting image upload...', { file: file.name, type, size: file.size });
+      
+      // Upload to Cloudinary using API route instead of direct upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      
+      console.log('Uploading via API route...');
+      const response = await fetch('/api/upload-simple', {
+        method: 'POST',
+        body: uploadFormData
+      });
 
-      const response = await fetch(
-        'https://api.cloudinary.com/v1_1/dqhfbkdea/image/upload',
-        {
-          method: 'POST',
-          body: formData
-        }
-      );
-
+      console.log('API response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`Upload failed (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
-      const imageUrl = data.secure_url;
+      console.log('Upload successful:', data);
+      
+      if (!data.url) {
+        console.error('No URL in response:', data);
+        throw new Error('No URL returned from upload');
+      }
+      
+      const imageUrl = data.url;
 
       // Update user data
       const updatedUser = {
@@ -72,6 +83,7 @@ export default function ProfilePage() {
       };
 
       // Update in Supabase
+      console.log('Updating user in Supabase...', { userId: user.id, imageUrl, type });
       const { error } = await supabase
         .from('users')
         .update({
@@ -79,19 +91,36 @@ export default function ProfilePage() {
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw new Error(`Database update failed: ${error.message}`);
+      }
+      
+      console.log('Supabase update successful');
 
       // Update localStorage
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      console.log('Updating localStorage and state...');
+      try {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
 
-      if (type === 'cover') {
-        setCoverPhoto(imageUrl);
+        if (type === 'cover') {
+          setCoverPhoto(imageUrl);
+        }
+        console.log('State update successful');
+      } catch (stateError) {
+        console.error('State update error:', stateError);
+        throw new Error(`State update failed: ${stateError instanceof Error ? stateError.message : 'Unknown error'}`);
       }
 
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload image. Please try again.');
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
+      alert(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsUploading(false);
     }
@@ -102,6 +131,7 @@ export default function ProfilePage() {
   };
 
   const handleCoverPhotoClick = () => {
+    console.log('Cover photo clicked');
     coverInputRef.current?.click();
   };
 
@@ -120,9 +150,11 @@ export default function ProfilePage() {
 
   const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log('Cover photo file selected:', file);
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
+        console.log('File reader loaded, opening crop modal');
         setCropImageSrc(reader.result as string);
         setCropType('cover');
         setShowCropModal(true);
@@ -133,15 +165,25 @@ export default function ProfilePage() {
 
   const handleCropComplete = async (croppedImageUrl: string) => {
     try {
+      console.log('handleCropComplete called with:', { croppedImageUrl, cropType });
+      
       // Convert blob URL to file
       const response = await fetch(croppedImageUrl);
       const blob = await response.blob();
       const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
       
+      console.log('Created file from blob:', { file: file.name, size: file.size, type: file.type });
+      
       // Upload the cropped image
+      console.log('Calling handleImageUpload with cropType:', cropType);
       await handleImageUpload(file, cropType);
     } catch (error) {
       console.error('Error processing cropped image:', error);
+      console.error('Crop complete error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
       alert('Failed to process cropped image. Please try again.');
     }
   };
@@ -200,9 +242,11 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             {/* Cover Photo */}
             <div 
-              className="h-64 bg-gradient-to-r from-[#20B2AA] via-[#1a9b9b] to-[#20B2AA] relative cursor-pointer group"
+              className="w-full bg-gradient-to-r from-[#20B2AA] via-[#1a9b9b] to-[#20B2AA] relative cursor-pointer group"
               onClick={handleCoverPhotoClick}
               style={{
+                width: '1200px',
+                height: '460px',
                 backgroundImage: coverPhoto ? `url(${coverPhoto})` : '',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
@@ -354,47 +398,12 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Activity Section */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-                <div className="flex items-center mb-6">
-                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Recent Activity</h2>
-                </div>
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-[#20B2AA] rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-lg font-semibold text-gray-900">Joined Codebyters</p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(user.created_at).toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-lg font-semibold text-gray-900">Profile completed</p>
-                      <p className="text-sm text-gray-500">Account setup finished</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Social Media Section */}
+              <SocialMediaSection 
+                userId={user.id} 
+                isEditing={isEditing} 
+                onEditToggle={() => setIsEditing(!isEditing)} 
+              />
             </div>
 
             {/* Right Column - Quick Info */}
@@ -418,38 +427,10 @@ export default function ProfilePage() {
                     <span className="text-gray-600 font-medium">Committees</span>
                     <span className="font-bold text-2xl text-[#20B2AA]">0</span>
                   </div>
-                  <div className="flex justify-between items-center py-3">
-                    <span className="text-gray-600 font-medium">Posts</span>
-                    <span className="font-bold text-2xl text-[#20B2AA]">0</span>
-                  </div>
                 </div>
               </div>
 
-              {/* Contact Info */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-                <div className="flex items-center mb-6">
-                  <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Contact Information</h3>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                    <svg className="w-6 h-6 text-[#20B2AA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-gray-900 font-medium">{user.email}</span>
-                  </div>
-                  <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                    <svg className="w-6 h-6 text-[#20B2AA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span className="text-gray-900 font-medium">Student</span>
-                  </div>
-                </div>
-              </div>
+             
             </div>
           </div>
         </div>
@@ -461,7 +442,7 @@ export default function ProfilePage() {
         onClose={() => setShowCropModal(false)}
         onCrop={handleCropComplete}
         imageSrc={cropImageSrc}
-        aspect={cropType === 'profile' ? 1 : 16/9}
+        aspect={cropType === 'profile' ? 1 : 1200/460}
       />
     </div>
   );

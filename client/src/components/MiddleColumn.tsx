@@ -132,15 +132,27 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
                 {event.pictures.length > 0 && (
                   <div className="mb-4">
                     {event.pictures.length === 1 ? (
-                      <div className="relative max-w-md mx-auto">
+                      <div className="relative">
                         <Image
                           src={event.pictures[0].picture_url}
                           alt={event.title}
                           width={0}
                           height={0}
-                          sizes="(max-width: 768px) 100vw, 400px"
-                          className="w-full max-h-96 object-cover rounded-lg"
+                          sizes="(max-width: 768px) 100vw, 600px"
+                          className="w-full h-auto object-contain rounded-lg"
                           unoptimized
+                          onLoad={(e) => {
+                            const img = e.target as HTMLImageElement;
+                            const aspectRatio = img.naturalWidth / img.naturalHeight;
+                            
+                            // If landscape (aspect ratio > 1), show full width
+                            if (aspectRatio > 1) {
+                              img.className = "w-full h-auto object-contain rounded-lg";
+                            } else {
+                              // If portrait, use default sizing
+                              img.className = "w-full max-h-96 object-cover rounded-lg";
+                            }
+                          }}
                         />
                       </div>
                     ) : (
@@ -155,6 +167,18 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
                               sizes="(max-width: 768px) 50vw, 200px"
                               className="w-full h-32 object-cover rounded-lg"
                               unoptimized
+                              onLoad={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                const aspectRatio = img.naturalWidth / img.naturalHeight;
+                                
+                                // If landscape (aspect ratio > 1), show full width
+                                if (aspectRatio > 1) {
+                                  img.className = "w-full h-auto object-contain rounded-lg";
+                                } else {
+                                  // If portrait, use default sizing
+                                  img.className = "w-full h-32 object-cover rounded-lg";
+                                }
+                              }}
                             />
                             {index === 3 && event.pictures.length > 4 && (
                               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">

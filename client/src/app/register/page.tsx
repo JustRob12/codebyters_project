@@ -97,34 +97,31 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-white">
       <Header />
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-      {/* Left side with logo */}
-      <div className="hidden lg:flex lg:w-1/2 bg-white items-center justify-center min-h-[calc(100vh-4rem)]">
-        <div className="text-center">
-          <Image
-            src="/codebyterslogo.png"
-            alt="Codebyters Logo"
-            width={350}
-            height={350}
-            className="mx-auto mb-10"
-          />
-         
+    {/* Left side with welcome message */}
+    <div className="hidden lg:flex lg:w-1/2 bg-white items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="text-left max-w-lg">
+          <h1 className="mb-6 text-black">
+            <div className="text-3xl font-medium font-semibold">Welcome to</div>
+            <div className="text-8xl font-bold" style={{ color: '#20B2AA' }}>CODEBYTERS</div>
+          </h1>
+          <p className="text-xl text-gray-600 leading-relaxed">
+            Where IT minds connect, learn, and grow together into future innovators.
+            innovators.
+          </p>
         </div>
       </div>
+
 
       {/* Right side with register form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-4xl mx-auto">
           <div className="text-center mb-6 lg:hidden">
-            <Image
-              src="/codebyterslogo.png"
-              alt="Codebyters Logo"
-              width={100}
-              height={100}
-              className="mx-auto mb-4"
-            />
-            <h1 className="text-xl font-bold" style={{ color: '#20B2AA' }}>
-              CODEBYTERS
+            <h1 className="text-3xl font-bold mb-4">
+              Welcome to <span style={{ color: '#20B2AA' }}>CodeByters!</span>
             </h1>
+            <p className="text-sm text-gray-600">
+              Where IT minds connect, learn, and grow together into future innovators.
+            </p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
@@ -223,7 +220,7 @@ export default function RegisterPage() {
                         placeholder="0000-0000"
                         maxLength={9}
                       />
-                      <p className="text-xs text-gray-500 mt-1">Format: 0000-0000</p>
+                     
                     </div>
                   </div>
 
@@ -244,8 +241,6 @@ export default function RegisterPage() {
                       <option value="2nd Year">2nd Year</option>
                       <option value="3rd Year">3rd Year</option>
                       <option value="4th Year">4th Year</option>
-                      <option value="5th Year">5th Year</option>
-                      <option value="Graduate">Graduate</option>
                     </select>
                   </div>
                 </div>
