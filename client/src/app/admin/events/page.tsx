@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminHeader from "@/components/AdminHeader";
+import AdminDashboardHeader from "@/components/AdminDashboardHeader";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
 import { supabase } from "@/lib/supabase";
 import Image from 'next/image';
+import { useGlobalLoading } from '@/contexts/LoadingContext';
 
 interface Event {
   id: number;
@@ -30,6 +31,7 @@ export default function AdminEventsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   useEffect(() => {
     fetchEvents();
@@ -66,6 +68,7 @@ export default function AdminEventsPage() {
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    startLoading('Creating event...');
 
     try {
       // Insert event
@@ -112,6 +115,7 @@ export default function AdminEventsPage() {
       console.error('Error adding event:', error);
     } finally {
       setIsSubmitting(false);
+      stopLoading();
     }
   };
 
@@ -132,6 +136,7 @@ export default function AdminEventsPage() {
     if (!editingEvent) return;
 
     setIsSubmitting(true);
+    startLoading('Updating event...');
 
     try {
       // Update event
@@ -185,6 +190,7 @@ export default function AdminEventsPage() {
       console.error('Error updating event:', error);
     } finally {
       setIsSubmitting(false);
+      stopLoading();
     }
   };
 
@@ -192,6 +198,8 @@ export default function AdminEventsPage() {
     if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
       return;
     }
+
+    startLoading('Deleting event...');
 
     try {
       // Delete event (pictures will be deleted automatically due to CASCADE)
@@ -205,6 +213,8 @@ export default function AdminEventsPage() {
       fetchEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -236,7 +246,7 @@ export default function AdminEventsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AdminHeader />
+        <AdminDashboardHeader />
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#20B2AA] mx-auto"></div>
@@ -249,7 +259,7 @@ export default function AdminEventsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminHeader />
+      <AdminDashboardHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="flex justify-between items-center mb-8">

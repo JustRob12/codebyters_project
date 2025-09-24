@@ -122,33 +122,55 @@ export default function StudentHeader() {
           <nav className="hidden lg:flex items-center space-x-8">
             <Link
               href="/dashboard"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 pathname === '/dashboard'
                   ? 'text-[#20B2AA] bg-gray-100'
                   : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
               }`}
             >
-              Home
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              <span>Home</span>
             </Link>
             <Link
-              href="/events"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === '/events'
+              href="/officers"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/officers'
                   ? 'text-[#20B2AA] bg-gray-100'
                   : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
               }`}
             >
-              Events
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>Officers</span>
             </Link>
             <Link
-              href="/committees"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === '/committees'
+              href="/developers"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/developers'
                   ? 'text-[#20B2AA] bg-gray-100'
                   : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
               }`}
             >
-              Committees
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              <span>Developers</span>
+            </Link>
+            <Link
+              href="/instructors"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/instructors'
+                  ? 'text-[#20B2AA] bg-gray-100'
+                  : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <span>Instructors</span>
             </Link>
           </nav>
 
@@ -255,38 +277,60 @@ export default function StudentHeader() {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Horizontal */}
       <div className="lg:hidden border-t border-gray-200">
-        <div className="px-2 pt-2 pb-3 space-y-1">
+        <div className="flex justify-around px-2 py-3">
           <Link
             href="/dashboard"
-            className={`block px-3 py-2 rounded-md text-base font-medium ${
+            className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
               pathname === '/dashboard'
                 ? 'text-[#20B2AA] bg-gray-100'
                 : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
             }`}
           >
-            Home
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>Home</span>
           </Link>
           <Link
-            href="/events"
-            className={`block px-3 py-2 rounded-md text-base font-medium ${
-              pathname === '/events'
+            href="/officers"
+            className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+              pathname === '/officers'
                 ? 'text-[#20B2AA] bg-gray-100'
                 : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
             }`}
           >
-            Events
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>Officers</span>
           </Link>
           <Link
-            href="/committees"
-            className={`block px-3 py-2 rounded-md text-base font-medium ${
-              pathname === '/committees'
+            href="/developers"
+            className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+              pathname === '/developers'
                 ? 'text-[#20B2AA] bg-gray-100'
                 : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
             }`}
           >
-            Committees
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            <span>Developers</span>
+          </Link>
+          <Link
+            href="/instructors"
+            className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+              pathname === '/instructors'
+                ? 'text-[#20B2AA] bg-gray-100'
+                : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+            }`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span>Instructors</span>
           </Link>
         </div>
       </div>

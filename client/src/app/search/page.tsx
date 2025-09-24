@@ -60,15 +60,34 @@ export default function SearchPage() {
 
     setLoading(true);
     try {
-      // Search students
+      // Search students - simplified approach
       const { data: studentsData, error: studentsError } = await supabase
         .from('users')
-        .select('id, first_name, last_name, student_id, profile_picture, year, created_at')
-        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,student_id.ilike.%${query}%`)
-        .eq('is_active', true)
-        .limit(10);
+        .select('id, first_name, last_name, student_id, profile_picture, year, created_at, role')
+        .neq('role', 0) // Exclude admin users (role 0)
+        .limit(50); // Get more records to filter client-side
 
-      if (studentsError) throw studentsError;
+      if (studentsError) {
+        console.error('Database error:', studentsError);
+        throw studentsError;
+      }
+
+      console.log('Raw students data:', studentsData);
+      console.log('Search query:', query);
+
+      // Filter for matches on the client side
+      const filteredStudents = studentsData?.filter(student => {
+        const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
+        const queryLower = query.toLowerCase();
+        
+        // Check if query matches first name, last name, student_id, or full name
+        return student.first_name.toLowerCase().includes(queryLower) ||
+               student.last_name.toLowerCase().includes(queryLower) ||
+               student.student_id.toLowerCase().includes(queryLower) ||
+               fullName.includes(queryLower);
+      }) || [];
+
+      console.log('Filtered students:', filteredStudents);
 
       // Search events
       const { data: eventsData, error: eventsError } = await supabase
@@ -93,7 +112,7 @@ export default function SearchPage() {
       })) || [];
 
       setResults({
-        students: studentsData || [],
+        students: filteredStudents,
         events: eventsWithPictures
       });
     } catch (error) {
@@ -252,7 +271,7 @@ export default function SearchPage() {
               {currentResults.students.length > 0 && (
                 <div className="space-y-3">
                   {currentResults.students.map((student) => (
-                    <div key={student.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div key={student.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-center space-x-4">
                         <div className="w-12 h-12 bg-[#20B2AA] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                           {student.profile_picture ? (
@@ -275,9 +294,6 @@ export default function SearchPage() {
                           <h3 className="text-lg font-semibold text-gray-900">
                             {student.first_name} {student.last_name}
                           </h3>
-                          <p className="text-sm text-gray-500">Student ID: {student.student_id}</p>
-                          <p className="text-sm text-gray-500">Year: {student.year}</p>
-                          <p className="text-xs text-gray-400">Joined {formatDate(student.created_at)}</p>
                         </div>
                         <button
                           onClick={() => visitProfile(student.id)}

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function AdminHeader() {
+export default function AdminDashboardHeader() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -54,62 +54,58 @@ export default function AdminHeader() {
             </Link>
           </div>
 
-          {/* Center - Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
-            <Link
-              href="/admin"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === '/admin'
-                  ? 'text-[#20B2AA] bg-gray-100'
-                  : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/admin/users"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === '/admin/users'
-                  ? 'text-[#20B2AA] bg-gray-100'
-                  : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-              }`}
-            >
-              Users
-            </Link>
-            <Link
-              href="/admin/events"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === '/admin/events'
-                  ? 'text-[#20B2AA] bg-gray-100'
-                  : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-              }`}
-            >
-              Events
-            </Link>
-            <Link
-              href="/admin/committees"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === '/admin/committees'
-                  ? 'text-[#20B2AA] bg-gray-100'
-                  : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-              }`}
-            >
-              Committees
-            </Link>
-            <Link
-              href="/admin/settings"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === '/admin/settings'
-                  ? 'text-[#20B2AA] bg-gray-100'
-                  : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-              }`}
-            >
-              Settings
-            </Link>
-          </nav>
+          {/* Center - Search Bar */}
+          <div className="flex-1 max-w-lg mx-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search students and events..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#20B2AA] focus:border-[#20B2AA] text-sm"
+              />
+            </div>
+          </div>
 
-          {/* Right side - User Menu */}
+          {/* Right side - Navigation and User Menu */}
           <div className="flex items-center space-x-4">
+            {/* Navigation Links */}
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link
+                href="/admin"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  pathname === '/admin'
+                    ? 'text-[#20B2AA] bg-gray-100'
+                    : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+                }`}
+              >
+                Home
+              </Link>
+              <Link
+                href="/admin/events"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  pathname === '/admin/events'
+                    ? 'text-[#20B2AA] bg-gray-100'
+                    : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+                }`}
+              >
+                Events
+              </Link>
+              <Link
+                href="/admin/committees"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  pathname === '/admin/committees'
+                    ? 'text-[#20B2AA] bg-gray-100'
+                    : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+                }`}
+              >
+                Committees
+              </Link>
+            </nav>
+
             {/* Admin Badge */}
             <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,6 +124,10 @@ export default function AdminHeader() {
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-medium text-gray-900">Admin admin</p>
+                  <p className="text-xs text-gray-500">Admin</p>
                 </div>
                 <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -176,7 +176,7 @@ export default function AdminHeader() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className="lg:hidden border-t border-gray-200">
+      <div className="md:hidden border-t border-gray-200">
         <div className="px-2 pt-2 pb-3 space-y-1">
           <Link
             href="/admin"
@@ -186,17 +186,7 @@ export default function AdminHeader() {
                 : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
             }`}
           >
-            Dashboard
-          </Link>
-          <Link
-            href="/admin/users"
-            className={`block px-3 py-2 rounded-md text-base font-medium ${
-              pathname === '/admin/users'
-                ? 'text-[#20B2AA] bg-gray-100'
-                : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-            }`}
-          >
-            Users
+            Home
           </Link>
           <Link
             href="/admin/events"
@@ -218,16 +208,6 @@ export default function AdminHeader() {
           >
             Committees
           </Link>
-          <Link
-            href="/admin/settings"
-            className={`block px-3 py-2 rounded-md text-base font-medium ${
-              pathname === '/admin/settings'
-                ? 'text-[#20B2AA] bg-gray-100'
-                : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-            }`}
-          >
-            Settings
-          </Link>
         </div>
       </div>
 
@@ -241,3 +221,4 @@ export default function AdminHeader() {
     </header>
   );
 }
+

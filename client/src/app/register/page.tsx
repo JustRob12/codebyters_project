@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
+import { useGlobalLoading } from "@/contexts/LoadingContext";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -39,6 +41,7 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError('');
     setSuccess(false);
+    startLoading('Creating your account...');
 
     try {
       // Validate password confirmation
@@ -90,6 +93,7 @@ export default function RegisterPage() {
       console.error('Registration error:', err);
     } finally {
       setIsLoading(false);
+      stopLoading();
     }
   };
 

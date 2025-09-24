@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
+import { useGlobalLoading } from "@/contexts/LoadingContext";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function LoginPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -28,6 +30,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    startLoading('Signing you in...');
 
     try {
       // Get user from database
@@ -71,6 +74,7 @@ export default function LoginPage() {
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
+      stopLoading();
     }
   };
 

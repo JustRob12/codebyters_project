@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useGlobalLoading } from '@/contexts/LoadingContext';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -18,13 +19,24 @@ export default function ProfilePage() {
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string>('');
   const [cropType, setCropType] = useState<'profile' | 'cover'>('profile');
+  const [activeTab, setActiveTab] = useState<'about' | 'committees' | 'social'>('about');
+  const [userCommittees, setUserCommittees] = useState<any[]>([]);
+  const [socialMediaLinks, setSocialMediaLinks] = useState<any[]>([]);
   const router = useRouter();
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const { startLoading, stopLoading, setLoadingMessage } = useGlobalLoading();
 
   useEffect(() => {
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserCommittees();
+      fetchSocialMediaLinks();
+    }
+  }, [user]);
 
   const fetchUserData = async () => {
     try {
@@ -41,10 +53,49 @@ export default function ProfilePage() {
     }
   };
 
+  const fetchUserCommittees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('committee_members')
+        .select(`
+          *,
+          committees (
+            id,
+            title,
+            description,
+            picture_url,
+            status
+          )
+        `)
+        .eq('student_id', user.student_id)
+        .eq('status', 'Active');
+
+      if (error) throw error;
+      setUserCommittees(data || []);
+    } catch (error) {
+      console.error('Error fetching user committees:', error);
+    }
+  };
+
+  const fetchSocialMediaLinks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('social_media_links')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSocialMediaLinks(data || []);
+    } catch (error) {
+      console.error('Error fetching social media links:', error);
+    }
+  };
+
   const handleImageUpload = async (file: File, type: 'profile' | 'cover') => {
     if (!file) return;
 
     setIsUploading(true);
+    startLoading(`Uploading ${type === 'profile' ? 'profile picture' : 'cover photo'}...`);
     try {
       console.log('Starting image upload...', { file: file.name, type, size: file.size });
       
@@ -123,6 +174,7 @@ export default function ProfilePage() {
       alert(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsUploading(false);
+      stopLoading();
     }
   };
 
@@ -199,20 +251,14 @@ export default function ProfilePage() {
     );
   }
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
         <StudentHeader />
-        <div className="pt-16 flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h1>
-            <p className="text-gray-600 mb-6">Please log in to view your profile.</p>
-            <Link
-              href="/login"
-              className="bg-[#20B2AA] text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity"
-            >
-              Go to Login
-            </Link>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#20B2AA] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading profile...</p>
           </div>
         </div>
       </div>
@@ -223,8 +269,8 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <StudentHeader />
       
-      <div className="pt-8">
-        <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="pt-4 sm:pt-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           {/* Back Button */}
           {/* <div className="mb-8">
             <Link
@@ -242,11 +288,9 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             {/* Cover Photo */}
             <div 
-              className="w-full bg-gradient-to-r from-[#20B2AA] via-[#1a9b9b] to-[#20B2AA] relative cursor-pointer group"
+              className="w-full bg-gradient-to-r from-[#20B2AA] via-[#1a9b9b] to-[#20B2AA] relative cursor-pointer group h-48 sm:h-64 md:h-80 lg:h-96"
               onClick={handleCoverPhotoClick}
               style={{
-                width: '1200px',
-                height: '460px',
                 backgroundImage: coverPhoto ? `url(${coverPhoto})` : '',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
@@ -281,12 +325,12 @@ export default function ProfilePage() {
             </div>
 
             {/* Profile Info */}
-            <div className="px-8 pb-8">
-              <div className="flex flex-col lg:flex-row items-start lg:items-end -mt-20 relative">
+            <div className="px-4 sm:px-6 lg:px-8 pb-8">
+              <div className="flex flex-col lg:flex-row items-start lg:items-end -mt-16 sm:-mt-20 relative">
                 {/* Profile Picture */}
                 <div className="relative z-10">
                   <div 
-                    className="w-40 h-40 bg-white rounded-full border-4 border-white shadow-2xl flex items-center justify-center cursor-pointer group hover:scale-105 transition-all duration-300"
+                    className="w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 bg-white rounded-full border-4 border-white shadow-2xl flex items-center justify-center cursor-pointer group hover:scale-105 transition-all duration-300"
                     onClick={handleProfilePictureClick}
                   >
                     {user.profile_picture ? (
@@ -300,7 +344,7 @@ export default function ProfilePage() {
                         unoptimized
                       />
                     ) : (
-                      <svg className="w-20 h-20 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                       </svg>
                     )}
@@ -321,12 +365,12 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Profile Details */}
-                <div className="mt-5 lg:mt-0 lg:ml-8 flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900">
+                <div className="mt-4 sm:mt-5 lg:mt-0 lg:ml-8 flex-1 w-full">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                     {user.first_name} {user.last_name}
                   </h1>
-                  <div className="flex items-center space-x-4 mb-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#20B2AA]/10 text-[#20B2AA]">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#20B2AA]/10 text-[#20B2AA] w-fit">
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
@@ -342,18 +386,18 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-6 lg:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                  <button className="bg-[#20B2AA] text-white px-6 py-3 rounded-xl hover:bg-[#1a9b9b] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mt-4 sm:mt-6 lg:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                  <button className="bg-[#20B2AA] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-[#1a9b9b] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base">
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                       <span>Edit Profile</span>
                     </div>
                   </button>
-                  <button className="border-2 border-gray-200 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="border-2 border-gray-200 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base">
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                       </svg>
                       <span>Share Profile</span>
@@ -364,74 +408,202 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Profile Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-            {/* Left Column - About */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* About Section */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          {/* Navigation Tabs */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mt-6">
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab('about')}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+                  activeTab === 'about'
+                    ? 'text-[#20B2AA] border-b-2 border-[#20B2AA] bg-[#20B2AA]/5'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>About</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('committees')}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+                  activeTab === 'committees'
+                    ? 'text-[#20B2AA] border-b-2 border-[#20B2AA] bg-[#20B2AA]/5'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>Committees</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('social')}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+                  activeTab === 'social'
+                    ? 'text-[#20B2AA] border-b-2 border-[#20B2AA] bg-[#20B2AA]/5'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  <span>Social Media</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="mt-6">
+            {activeTab === 'about' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                {/* Left Column - About */}
+                <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+                  {/* About Section */}
+                  <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#20B2AA] rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900">About</h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="space-y-1">
+                        <label className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Full Name</label>
+                        <p className="text-base sm:text-lg text-gray-900 font-medium break-words">{user.first_name} {user.middle_initial} {user.last_name}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Student ID</label>
+                        <p className="text-base sm:text-lg text-gray-900 font-medium break-words">{user.student_id}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Year Level</label>
+                        <p className="text-base sm:text-lg text-gray-900 font-medium">{user.year}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+                        <p className="text-base sm:text-lg text-gray-900 font-medium break-words">{user.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Quick Info */}
+                <div className="space-y-6 sm:space-y-8">
+                  {/* Quick Stats */}
+                  <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900">Quick Stats</h3>
+                    </div>
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="flex justify-between items-center py-2 sm:py-3 border-b border-gray-100">
+                        <span className="text-sm sm:text-base text-gray-600 font-medium">Events Attended</span>
+                        <span className="font-bold text-xl sm:text-2xl text-[#20B2AA]">0</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 sm:py-3 border-b border-gray-100">
+                        <span className="text-sm sm:text-base text-gray-600 font-medium">Committees</span>
+                        <span className="font-bold text-xl sm:text-2xl text-[#20B2AA]">{userCommittees.length}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'committees' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 border border-gray-100">
                 <div className="flex items-center mb-6">
                   <div className="w-10 h-10 bg-[#20B2AA] rounded-xl flex items-center justify-center mr-4">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">About</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">My Committees</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Full Name</label>
-                    <p className="text-lg text-gray-900 font-medium">{user.first_name} {user.middle_initial} {user.last_name}</p>
+                
+                {userCommittees.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {userCommittees.map((membership) => (
+                      <div key={membership.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                        {membership.committees.picture_url && (
+                          <div className="mb-4">
+                            <Image
+                              src={membership.committees.picture_url}
+                              alt={membership.committees.title}
+                              width={300}
+                              height={200}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                          </div>
+                        )}
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">{membership.committees.title}</h3>
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-3">{membership.committees.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            membership.committees.status === 'Apply' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {membership.committees.status}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Joined {new Date(membership.joined_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Student ID</label>
-                    <p className="text-lg text-gray-900 font-medium">{user.student_id}</p>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No committees yet</h3>
+                    <p className="text-gray-500 mb-6">You haven't joined any committees yet.</p>
+                    <Link
+                      href="/committees"
+                      className="inline-block bg-[#20B2AA] text-white px-6 py-3 rounded-lg hover:bg-[#1a9b94] transition-colors"
+                    >
+                      Browse Committees
+                    </Link>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Year Level</label>
-                    <p className="text-lg text-gray-900 font-medium">{user.year}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Email</label>
-                    <p className="text-lg text-gray-900 font-medium">{user.email}</p>
-                  </div>
-                </div>
+                )}
               </div>
+            )}
 
-              {/* Social Media Section */}
-              <SocialMediaSection 
-                userId={user.id} 
-                isEditing={isEditing} 
-                onEditToggle={() => setIsEditing(!isEditing)} 
-              />
-            </div>
-
-            {/* Right Column - Quick Info */}
-            <div className="space-y-8">
-              {/* Quick Stats */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            {activeTab === 'social' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 border border-gray-100">
                 <div className="flex items-center mb-6">
-                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mr-4">
+                  <div className="w-10 h-10 bg-[#20B2AA] rounded-xl flex items-center justify-center mr-4">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Quick Stats</h3>
+                  <h2 className="text-2xl font-bold text-gray-900">Social Media Links</h2>
                 </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                    <span className="text-gray-600 font-medium">Events Attended</span>
-                    <span className="font-bold text-2xl text-[#20B2AA]">0</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                    <span className="text-gray-600 font-medium">Committees</span>
-                    <span className="font-bold text-2xl text-[#20B2AA]">0</span>
-                  </div>
-                </div>
+                
+                <SocialMediaSection 
+                  userId={user.id} 
+                  isEditing={isEditing} 
+                  onEditToggle={() => setIsEditing(!isEditing)} 
+                />
               </div>
-
-             
-            </div>
+            )}
           </div>
         </div>
       </div>

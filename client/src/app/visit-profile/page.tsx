@@ -12,6 +12,8 @@ export default function VisitProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'about' | 'committees' | 'social'>('about');
+  const [userCommittees, setUserCommittees] = useState<any[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get('id');
@@ -59,6 +61,20 @@ export default function VisitProfilePage() {
         <StudentHeader />
         <div className="pt-16 flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#20B2AA]"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <StudentHeader />
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#20B2AA] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading profile...</p>
+          </div>
         </div>
       </div>
     );

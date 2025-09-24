@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
+import ImageModal from './ImageModal';
 
 interface Event {
   id: number;
@@ -23,6 +25,21 @@ interface MiddleColumnProps {
 }
 
 export default function MiddleColumn({ user, events, loading }: MiddleColumnProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const openModal = (event: Event, imageIndex: number = 0) => {
+    setSelectedEvent(event);
+    setSelectedImageIndex(imageIndex);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedEvent(null);
+    setSelectedImageIndex(0);
+  };
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -62,8 +79,8 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
   };
 
   return (
-    <div className="lg:col-span-6 h-[calc(100vh-4rem)] overflow-y-auto bg-gray-50">
-      <div className="space-y-4 p-4">
+    <div className="w-full lg:col-span-6 h-[calc(100vh-4rem)] overflow-y-auto bg-gray-50 pb-16 lg:pb-0">
+      <div className="space-y-4 p-3 sm:p-4">
         {/* Create Post Card
         <div className="bg-white rounded-lg shadow-md p-3">
           <div className="flex items-center space-x-3">
@@ -131,15 +148,18 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
                 {/* Event Pictures */}
                 {event.pictures.length > 0 && (
                   <div className="mb-4">
-                    {event.pictures.length === 1 ? (
-                      <div className="relative">
+                    {event.pictures.length === 1 && event.pictures[0].picture_url ? (
+                      <div 
+                        className="relative cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => openModal(event, 0)}
+                      >
                         <Image
                           src={event.pictures[0].picture_url}
                           alt={event.title}
                           width={0}
                           height={0}
                           sizes="(max-width: 768px) 100vw, 600px"
-                          className="w-full h-auto object-contain rounded-lg"
+                          className="w-full h-auto object-contain"
                           unoptimized
                           onLoad={(e) => {
                             const img = e.target as HTMLImageElement;
@@ -147,45 +167,134 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
                             
                             // If landscape (aspect ratio > 1), show full width
                             if (aspectRatio > 1) {
-                              img.className = "w-full h-auto object-contain rounded-lg";
+                              img.className = "w-full h-auto object-contain";
                             } else {
                               // If portrait, use default sizing
-                              img.className = "w-full max-h-96 object-cover rounded-lg";
+                              img.className = "w-full max-h-96 object-cover";
                             }
                           }}
                         />
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
-                        {event.pictures.slice(0, 4).map((picture, index) => (
-                          <div key={picture.id} className="relative">
+                    ) : event.pictures.length === 2 ? (
+                      <div className="grid grid-cols-2 gap-0.5">
+                        {event.pictures.map((picture, index) => (
+                          picture.picture_url && (
+                            <div 
+                              key={picture.id} 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                              onClick={() => openModal(event, index)}
+                            >
+                              <Image
+                                src={picture.picture_url}
+                                alt={`${event.title} ${index + 1}`}
+                                width={0}
+                                height={0}
+                                sizes="(max-width: 768px) 50vw, 300px"
+                                className="w-full h-48 object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    ) : event.pictures.length === 3 ? (
+                      <div className="grid grid-cols-2 gap-0.5">
+                        {event.pictures[0].picture_url && (
+                          <div 
+                            className="row-span-2 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                            onClick={() => openModal(event, 0)}
+                          >
                             <Image
-                              src={picture.picture_url}
-                              alt={`${event.title} ${index + 1}`}
+                              src={event.pictures[0].picture_url}
+                              alt={`${event.title} 1`}
                               width={0}
                               height={0}
-                              sizes="(max-width: 768px) 50vw, 200px"
-                              className="w-full h-32 object-cover rounded-lg"
+                              sizes="(max-width: 768px) 50vw, 300px"
+                              className="w-full h-full object-cover"
                               unoptimized
-                              onLoad={(e) => {
-                                const img = e.target as HTMLImageElement;
-                                const aspectRatio = img.naturalWidth / img.naturalHeight;
-                                
-                                // If landscape (aspect ratio > 1), show full width
-                                if (aspectRatio > 1) {
-                                  img.className = "w-full h-auto object-contain rounded-lg";
-                                } else {
-                                  // If portrait, use default sizing
-                                  img.className = "w-full h-32 object-cover rounded-lg";
-                                }
-                              }}
                             />
-                            {index === 3 && event.pictures.length > 4 && (
-                              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                                <span className="text-white font-semibold">+{event.pictures.length - 4}</span>
-                              </div>
-                            )}
                           </div>
+                        )}
+                        {event.pictures[1].picture_url && (
+                          <div 
+                            className="cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                            onClick={() => openModal(event, 1)}
+                          >
+                            <Image
+                              src={event.pictures[1].picture_url}
+                              alt={`${event.title} 2`}
+                              width={0}
+                              height={0}
+                              sizes="(max-width: 768px) 50vw, 300px"
+                              className="w-full h-48 object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        )}
+                        {event.pictures[2].picture_url && (
+                          <div 
+                            className="cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                            onClick={() => openModal(event, 2)}
+                          >
+                            <Image
+                              src={event.pictures[2].picture_url}
+                              alt={`${event.title} 3`}
+                              width={0}
+                              height={0}
+                              sizes="(max-width: 768px) 50vw, 300px"
+                              className="w-full h-48 object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ) : event.pictures.length === 4 ? (
+                      <div className="grid grid-cols-2 gap-0.5">
+                        {event.pictures.map((picture, index) => (
+                          picture.picture_url && (
+                            <div 
+                              key={picture.id} 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                              onClick={() => openModal(event, index)}
+                            >
+                              <Image
+                                src={picture.picture_url}
+                                alt={`${event.title} ${index + 1}`}
+                                width={0}
+                                height={0}
+                                sizes="(max-width: 768px) 50vw, 300px"
+                                className="w-full h-48 object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-0.5">
+                        {event.pictures.slice(0, 4).map((picture, index) => (
+                          picture.picture_url && (
+                            <div 
+                              key={picture.id} 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                              onClick={() => openModal(event, index)}
+                            >
+                              <Image
+                                src={picture.picture_url}
+                                alt={`${event.title} ${index + 1}`}
+                                width={0}
+                                height={0}
+                                sizes="(max-width: 768px) 50vw, 300px"
+                                className={`w-full h-48 object-cover ${index === 3 && event.pictures.length > 4 ? 'opacity-50' : ''}`}
+                                unoptimized
+                              />
+                              {index === 3 && event.pictures.length > 4 && (
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                  <span className="text-black font-semibold text-lg drop-shadow-lg">+{event.pictures.length - 4}</span>
+                                </div>
+                              )}
+                            </div>
+                          )
                         ))}
                       </div>
                     )}
@@ -227,6 +336,19 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
           ))
         )}
       </div>
+
+      {/* Image Modal */}
+      {selectedEvent && (
+        <ImageModal
+          isOpen={modalOpen}
+          onClose={closeModal}
+          pictures={selectedEvent.pictures}
+          currentIndex={selectedImageIndex}
+          eventTitle={selectedEvent.title}
+          eventDescription={selectedEvent.description}
+          eventDate={selectedEvent.created_at}
+        />
+      )}
     </div>
   );
 }

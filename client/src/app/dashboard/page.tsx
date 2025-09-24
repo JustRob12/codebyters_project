@@ -8,6 +8,7 @@ import RightColumn from '@/components/RightColumn';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useGlobalLoading } from '@/contexts/LoadingContext';
 
 interface User {
   id: number;
@@ -39,6 +40,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   useEffect(() => {
     checkAuthentication();
@@ -46,14 +48,15 @@ export default function Dashboard() {
 
   const checkAuthentication = async () => {
     try {
+      startLoading('Loading dashboard...');
       const userData = localStorage.getItem('user');
       if (userData) {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         setIsAuthenticated(true);
         // Fetch other data only if authenticated
-        fetchNewUsers();
-        fetchEvents();
+        await fetchNewUsers();
+        await fetchEvents();
       } else {
         setIsAuthenticated(false);
         router.push('/login');
@@ -62,6 +65,9 @@ export default function Dashboard() {
       console.error('Error checking authentication:', error);
       setIsAuthenticated(false);
       router.push('/login');
+    } finally {
+      setLoading(false);
+      stopLoading();
     }
   };
 
@@ -113,21 +119,15 @@ export default function Dashboard() {
     }
   };
 
-  // Show loading or redirect if not authenticated
-  if (!isAuthenticated) {
+  // Show loading while checking authentication
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Header />
-        <div className="pt-16 flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <StudentHeader />
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">Please log in to access the dashboard.</p>
-            <button
-              onClick={() => router.push('/login')}
-              className="bg-[#20B2AA] text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity"
-            >
-              Go to Login
-            </button>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#20B2AA] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading dashboard...</p>
           </div>
         </div>
       </div>
@@ -140,7 +140,13 @@ export default function Dashboard() {
       
       <div className="pt-0">
         <div className="w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12">
+          {/* Mobile View - Only Middle Column */}
+          <div className="block lg:hidden">
+            <MiddleColumn user={user} events={events} loading={loading} />
+          </div>
+          
+          {/* Desktop View - All Columns */}
+          <div className="hidden lg:grid grid-cols-12">
             <LeftColumn user={user} />
             <MiddleColumn user={user} events={events} loading={loading} />
             <RightColumn newUsers={newUsers} />
