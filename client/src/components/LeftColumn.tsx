@@ -75,87 +75,88 @@ export default function LeftColumn({ user }: LeftColumnProps) {
   ];
 
   return (
-    <div className="lg:col-span-3 h-[calc(100vh-4rem)] overflow-hidden bg-white">
-      {/* User Profile Section */}
-      <div className="p-6 mb-6">
-        <Link href="/profile" className="block hover:bg-gray-50 rounded-lg p-3 transition-colors">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-              {user?.profile_picture ? (
-                <Image
-                  src={user.profile_picture}
-                  alt="Profile"
-                  width={48}
-                  height={48}
-                  className="rounded-full object-cover w-full h-full"
-                  style={{ borderRadius: '50%' }}
-                  unoptimized
-                />
-              ) : (
-                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-              )}
+    <div className="hidden lg:block lg:col-span-3 h-[calc(100vh-4rem)] overflow-hidden bg-white">
+        {/* User Profile Section */}
+        <div className="p-6 mb-6">
+          <Link href="/profile" className="block hover:bg-gray-50 rounded-lg p-3 transition-colors">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                {user?.profile_picture ? (
+                  <Image
+                    src={user.profile_picture}
+                    alt="Profile"
+                    width={48}
+                    height={48}
+                    className="rounded-full object-cover w-full h-full"
+                    style={{ borderRadius: '50%' }}
+                    unoptimized
+                  />
+                ) : (
+                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 truncate">
+                  {user ? `${user.first_name} ${user.last_name}` : 'Loading...'}
+                </h3>
+                <p className="text-sm text-gray-500">Student</p>
+              </div>
+              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">
-                {user ? `${user.first_name} ${user.last_name}` : 'Loading...'}
-              </h3>
-              <p className="text-sm text-gray-500">Student</p>
+          </Link>
+        </div>
+
+        {/* Navigation Menu */}
+        <div className="px-6">
+          <nav className="space-y-1">
+            {navigationItems.map((item) => {
+              const isActive = activeItem === item.id;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => setActiveItem(item.id)}
+                  className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-[#20B2AA]/10 text-[#20B2AA]'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <div className={`${isActive ? 'text-[#20B2AA]' : 'text-gray-500'}`}>
+                    {item.icon}
+                  </div>
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Separator */}
+          <div className="my-4 border-t border-gray-200"></div>
+
+          {/* Report a Problem - positioned after separator */}
+          <Link
+            href="/report"
+            onClick={() => setActiveItem('Report a Problem')}
+            className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
+              activeItem === 'Report a Problem'
+                ? 'bg-[#20B2AA]/10 text-[#20B2AA]'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <div className={`${activeItem === 'Report a Problem' ? 'text-[#20B2AA]' : 'text-gray-500'}`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
             </div>
-            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
+            <span className="font-medium">Report a Problem</span>
+          </Link>
+        </div>
       </div>
-
-      {/* Navigation Menu */}
-      <div className="px-6">
-        <nav className="space-y-1">
-          {navigationItems.map((item) => {
-            const isActive = activeItem === item.id;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => setActiveItem(item.id)}
-                className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-[#20B2AA]/10 text-[#20B2AA]'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <div className={`${isActive ? 'text-[#20B2AA]' : 'text-gray-500'}`}>
-                  {item.icon}
-                </div>
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Separator */}
-        <div className="my-4 border-t border-gray-200"></div>
-
-        {/* Report a Problem - positioned after separator */}
-        <Link
-          href="/report"
-          onClick={() => setActiveItem('Report a Problem')}
-          className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
-            activeItem === 'Report a Problem'
-              ? 'bg-[#20B2AA]/10 text-[#20B2AA]'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-          }`}
-        >
-          <div className={`${activeItem === 'Report a Problem' ? 'text-[#20B2AA]' : 'text-gray-500'}`}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <span className="font-medium">Report a Problem</span>
-        </Link>
-      </div>
-    </div>
+  
   );
 }

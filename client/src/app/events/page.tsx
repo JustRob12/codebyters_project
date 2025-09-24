@@ -1,6 +1,7 @@
 'use client';
 
 import StudentHeader from '@/components/StudentHeader';
+import FloatingNavigation from '@/components/FloatingNavigation';
 import Header from '@/components/Header';
 import ViewEventsStudent from '@/components/ViewEventsStudent';
 import { useState, useEffect } from 'react';
@@ -83,6 +84,7 @@ export default function EventsPage() {
     return (
       <div className="min-h-screen bg-gray-100">
         <StudentHeader />
+        <FloatingNavigation user={null} />
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#20B2AA] mx-auto"></div>
@@ -96,6 +98,7 @@ export default function EventsPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <StudentHeader />
+      <FloatingNavigation user={null} />
       
       <div className="pt-0">
         <div className="max-w-7xl mx-auto px-4 py-8">

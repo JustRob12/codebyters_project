@@ -242,8 +242,8 @@ export default function CommitteesPage() {
                     ) : (
                       <CloudinaryUpload
                         onUpload={handleImageUpload}
-                        folder="committees"
-                        className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-[#20B2AA] transition-colors"
+                        onRemove={() => setFormData(prev => ({ ...prev, picture_url: '' }))}
+                        currentUrl={formData.picture_url}
                       />
                     )}
                   </div>

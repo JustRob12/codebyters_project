@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import ImageModal from './ImageModal';
+import FloatingNavigation from './FloatingNavigation';
 
 interface Event {
   id: number;
@@ -28,6 +29,7 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
 
   const openModal = (event: Event, imageIndex: number = 0) => {
     setSelectedEvent(event);
@@ -79,7 +81,9 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
   };
 
   return (
-    <div className="w-full lg:col-span-6 h-[calc(100vh-4rem)] overflow-y-auto bg-gray-50 pb-16 lg:pb-0">
+    <>
+      <FloatingNavigation user={user} />
+      <div className="w-full lg:col-span-6 h-[calc(100vh-4rem)] overflow-y-auto bg-gray-50 pb-16 lg:pb-0">
       <div className="space-y-4 p-3 sm:p-4">
         {/* Create Post Card
         <div className="bg-white rounded-lg shadow-md p-3">
@@ -349,6 +353,7 @@ export default function MiddleColumn({ user, events, loading }: MiddleColumnProp
           eventDate={selectedEvent.created_at}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }

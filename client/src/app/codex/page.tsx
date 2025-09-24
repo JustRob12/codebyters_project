@@ -1,6 +1,7 @@
 'use client';
 
 import StudentHeader from '@/components/StudentHeader';
+import FloatingNavigation from '@/components/FloatingNavigation';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -193,6 +194,7 @@ export default function MyCodexPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <StudentHeader />
+      <FloatingNavigation user={user} />
       
       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-80px)]">
         {/* CODEX Description */}
