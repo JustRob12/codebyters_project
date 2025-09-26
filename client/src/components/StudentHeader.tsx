@@ -80,22 +80,19 @@ export default function StudentHeader() {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-0.5">
         <div className="flex items-center justify-between h-16">
           {/* Left side - Logo and Search */}
           <div className="flex items-center space-x-4">
-            {/* Codebyters Logo */}
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            {/* Logo */}
+            <Link href="/dashboard" className="flex items-center">
               <Image
                 src="/codebyterslogo.png"
-                alt="Codebyters"
+                alt="Logo"
                 width={40}
                 height={40}
                 className="rounded-full"
               />
-              <span className="text-xl font-bold" style={{ color: '#20B2AA' }}>
-                Codebyters
-              </span>
             </Link>
 
             {/* Search Bar */}
@@ -119,7 +116,7 @@ export default function StudentHeader() {
           </div>
 
           {/* Center - Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
             <Link
               href="/dashboard"
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${

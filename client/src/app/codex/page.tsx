@@ -180,9 +180,8 @@ export default function MyCodexPage() {
         height: 480, // 5 inches at 96 DPI
         useCORS: true,
         allowTaint: true,
-        background: '#ffffff',
         logging: false,
-        letterRendering: true
+        backgroundColor: '#ffffff',
       });
 
       // No styling restoration needed for portrait layout
@@ -191,12 +190,12 @@ export default function MyCodexPage() {
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
+      const link = document.createElement('a');
           link.download = `${user.first_name}_${user.last_name}_CODEX_ID_Card.png`;
           link.href = url;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
           URL.revokeObjectURL(url);
         }
         setIsDownloading(false);
@@ -248,9 +247,9 @@ export default function MyCodexPage() {
 
   return (
     <AuthGuard requireAuth={true} allowedRoles={[2]}>
-      <div className="min-h-screen bg-gray-50">
-        <StudentHeader />
-        <FloatingNavigation user={user} />
+    <div className="min-h-screen bg-gray-50">
+      <StudentHeader />
+      <FloatingNavigation user={user} />
       
       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-80px)]">
         {/* CODEX Description */}
@@ -340,16 +339,16 @@ export default function MyCodexPage() {
                       <p className="text-sm">Loading QR Code...</p>
                     </div>
                   </div>
-                ) : (
+                  ) : (
                   <div className="w-48 h-48 flex items-center justify-center" style={{ color: '#6b7280' }}>
-                    <div className="text-center">
+                      <div className="text-center">
                       <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
                       <p className="text-sm font-medium" style={{ color: '#4b5563' }}>Profile Required</p>
                     </div>
-                  </div>
-                )}
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -428,28 +427,28 @@ export default function MyCodexPage() {
                       border: '4px solid #166534'
                     }}>
                       {user?.profile_picture ? (
-                        <Image
-                          src={user.profile_picture}
-                          alt={`${user.first_name} ${user.last_name}`}
+                    <Image
+                      src={user.profile_picture}
+                      alt={`${user.first_name} ${user.last_name}`}
                           width={192}
                           height={192}
-                          className="rounded-full object-cover w-full h-full"
+                      className="rounded-full object-cover w-full h-full"
                           style={{ 
                             borderRadius: '50%',
                             objectFit: 'cover',
                             objectPosition: 'center'
                           }}
-                          unoptimized
+                      unoptimized
                           priority
-                        />
-                      ) : (
+                    />
+                  ) : (
                         <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
-                      )}
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  )}
                     </div>
-                  </div>
-
+                </div>
+                
                   {/* Student Information - Center */}
                   <div className="text-center flex-1 flex flex-col justify-center">
                     {/* Year */}
@@ -460,7 +459,7 @@ export default function MyCodexPage() {
                     {/* Name */}
                     <h2 className="text-2xl font-bold uppercase mb-3" style={{ color: '#166534' }}>
                       {user?.first_name} {user?.middle_initial || ''} {user?.last_name}
-                    </h2>
+                  </h2>
                     
                     {/* School ID */}
                     <p className="text-lg font-bold uppercase" style={{ color: '#166534' }}>

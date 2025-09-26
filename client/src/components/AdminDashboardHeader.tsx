@@ -34,23 +34,17 @@ export default function AdminDashboardHeader() {
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Left side - Logo and Admin Badge */}
+          {/* Left side - Logo */}
           <div className="flex items-center space-x-4">
-            {/* Codebyters Logo */}
-            <Link href="/admin" className="flex items-center space-x-2">
+            {/* Logo */}
+            <Link href="/admin" className="flex items-center">
               <Image
                 src="/codebyterslogo.png"
-                alt="Codebyters"
+                alt="Logo"
                 width={40}
                 height={40}
                 className="rounded-full"
               />
-              <div className="flex flex-col">
-                <span className="text-xl font-bold" style={{ color: '#20B2AA' }}>
-                  Codebyters
-                </span>
-                <span className="text-xs text-red-600 font-medium">Admin Panel</span>
-              </div>
             </Link>
           </div>
 
@@ -94,25 +88,28 @@ export default function AdminDashboardHeader() {
               >
                 Events
               </Link>
-              <Link
-                href="/admin/committees"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pathname === '/admin/committees'
-                    ? 'text-[#20B2AA] bg-gray-100'
-                    : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
-                }`}
-              >
-                Committees
-              </Link>
+               <Link
+                 href="/admin/committees"
+                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                   pathname === '/admin/committees'
+                     ? 'text-[#20B2AA] bg-gray-100'
+                     : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+                 }`}
+               >
+                 Committees
+               </Link>
+               <Link
+                 href="/admin/attendance-scanner"
+                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                   pathname === '/admin/attendance-scanner'
+                     ? 'text-[#20B2AA] bg-gray-100'
+                     : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+                 }`}
+               >
+                 Attendance Scanner
+               </Link>
             </nav>
 
-            {/* Admin Badge */}
-            <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span>Admin</span>
-            </div>
 
             {/* User Profile Dropdown */}
             <div className="relative">
@@ -126,8 +123,8 @@ export default function AdminDashboardHeader() {
                   </svg>
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-gray-900">Admin admin</p>
-                  <p className="text-xs text-gray-500">Admin</p>
+                  <p className="text-sm font-medium text-gray-900">Admin</p>
+                  <p className="text-xs text-gray-500">Administrator</p>
                 </div>
                 <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -207,6 +204,16 @@ export default function AdminDashboardHeader() {
             }`}
           >
             Committees
+          </Link>
+          <Link
+            href="/admin/attendance-scanner"
+            className={`block px-3 py-2 rounded-md text-base font-medium ${
+              pathname === '/admin/attendance-scanner'
+                ? 'text-[#20B2AA] bg-gray-100'
+                : 'text-gray-700 hover:text-[#20B2AA] hover:bg-gray-100'
+            }`}
+          >
+            Attendance Scanner
           </Link>
         </div>
       </div>

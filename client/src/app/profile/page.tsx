@@ -20,9 +20,10 @@ export default function ProfilePage() {
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string>('');
   const [cropType, setCropType] = useState<'profile' | 'cover'>('profile');
-  const [activeTab, setActiveTab] = useState<'about' | 'committees' | 'social'>('about');
+  const [activeTab, setActiveTab] = useState<'about' | 'committees' | 'social' | 'attendance'>('about');
   const [userCommittees, setUserCommittees] = useState<any[]>([]);
   const [socialMediaLinks, setSocialMediaLinks] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const router = useRouter();
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -36,6 +37,7 @@ export default function ProfilePage() {
     if (user) {
       fetchUserCommittees();
       fetchSocialMediaLinks();
+      fetchAttendanceRecords();
     }
   }, [user]);
 
@@ -89,6 +91,21 @@ export default function ProfilePage() {
       setSocialMediaLinks(data || []);
     } catch (error) {
       console.error('Error fetching social media links:', error);
+    }
+  };
+
+  const fetchAttendanceRecords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('attendance')
+        .select('*')
+        .eq('student_id', user.student_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAttendanceRecords(data || []);
+    } catch (error) {
+      console.error('Error fetching attendance records:', error);
     }
   };
 
@@ -458,6 +475,21 @@ export default function ProfilePage() {
                   <span>Social Media</span>
                 </div>
               </button>
+              <button
+                onClick={() => setActiveTab('attendance')}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+                  activeTab === 'attendance'
+                    ? 'text-[#20B2AA] border-b-2 border-[#20B2AA] bg-[#20B2AA]/5'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M6 16h.01" />
+                  </svg>
+                  <span>Attendance</span>
+                </div>
+              </button>
             </div>
           </div>
 
@@ -513,7 +545,7 @@ export default function ProfilePage() {
                     <div className="space-y-3 sm:space-y-4">
                       <div className="flex justify-between items-center py-2 sm:py-3 border-b border-gray-100">
                         <span className="text-sm sm:text-base text-gray-600 font-medium">Events Attended</span>
-                        <span className="font-bold text-xl sm:text-2xl text-[#20B2AA]">0</span>
+                        <span className="font-bold text-xl sm:text-2xl text-[#20B2AA]">{attendanceRecords.length}</span>
                       </div>
                       <div className="flex justify-between items-center py-2 sm:py-3 border-b border-gray-100">
                         <span className="text-sm sm:text-base text-gray-600 font-medium">Committees</span>
@@ -604,6 +636,98 @@ export default function ProfilePage() {
                   isEditing={isEditing} 
                   onEditToggle={() => setIsEditing(!isEditing)} 
                 />
+              </div>
+            )}
+
+            {activeTab === 'attendance' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 border border-gray-100">
+                <div className="flex items-center mb-6">
+                  <div className="w-10 h-10 bg-[#20B2AA] rounded-xl flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M6 16h.01" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Attendance Records</h2>
+                </div>
+                
+                {attendanceRecords.length > 0 ? (
+                  <div className="space-y-4">
+                    {attendanceRecords.map((record) => (
+                      <div key={record.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-1">{record.event_title}</h3>
+                            <p className="text-sm text-gray-600">
+                              {new Date(record.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
+                            {record.time_in && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Time In: {new Date(record.time_in).toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                            {record.time_out && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Time Out: {new Date(record.time_out).toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {record.time_in && record.time_out && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Duration:</span>
+                              <span className="font-medium text-gray-900">
+                                {(() => {
+                                  const timeIn = new Date(record.time_in);
+                                  const timeOut = new Date(record.time_out);
+                                  const duration = timeOut.getTime() - timeIn.getTime();
+                                  const hours = Math.floor(duration / (1000 * 60 * 60));
+                                  const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+                                  return `${hours}h ${minutes}m`;
+                                })()}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M6 16h.01" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No attendance records yet</h3>
+                    <p className="text-gray-500 mb-6">You haven't attended any events yet.</p>
+                    <Link
+                      href="/events"
+                      className="inline-block bg-[#20B2AA] text-white px-6 py-3 rounded-lg hover:bg-[#1a9b94] transition-colors"
+                    >
+                      Browse Events
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>
