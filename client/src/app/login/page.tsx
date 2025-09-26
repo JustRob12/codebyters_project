@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
 import { useGlobalLoading } from "@/contexts/LoadingContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { startLoading, stopLoading } = useGlobalLoading();
+  const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -51,8 +53,8 @@ export default function LoginPage() {
         throw new Error('Invalid email or password');
       }
 
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
+      // Store user data using AuthContext
+      login(userData);
 
       // Check user role
       if (userData.role === 0) {

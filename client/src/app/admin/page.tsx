@@ -7,6 +7,7 @@ import AdminRightColumn from "@/components/AdminRightColumn";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useGlobalLoading } from '@/contexts/LoadingContext';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function AdminDashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -99,24 +100,26 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminDashboardHeader />
-      
-      <div className="pt-0">
-        <div className="w-full">
-          {/* Mobile View - Only Middle Column */}
-          <div className="block lg:hidden">
-            <MiddleColumn user={user} events={events} loading={loading} />
-        </div>
+    <AuthGuard requireAuth={true} allowedRoles={[0]}>
+      <div className="min-h-screen bg-gray-50">
+        <AdminDashboardHeader />
+        
+        <div className="pt-0">
+          <div className="w-full">
+            {/* Mobile View - Only Middle Column */}
+            <div className="block lg:hidden">
+              <MiddleColumn user={user} events={events} loading={loading} />
+          </div>
 
-          {/* Desktop View - All Columns */}
-                  <div className="hidden lg:grid grid-cols-12">
-                    <AdminLeftColumn user={user} />
-                    <MiddleColumn user={user} events={events} loading={loading} />
-                    <AdminRightColumn newUsers={newUsers} />
-                  </div>
+            {/* Desktop View - All Columns */}
+                    <div className="hidden lg:grid grid-cols-12">
+                      <AdminLeftColumn user={user} />
+                      <MiddleColumn user={user} events={events} loading={loading} />
+                      <AdminRightColumn newUsers={newUsers} />
+                    </div>
+          </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

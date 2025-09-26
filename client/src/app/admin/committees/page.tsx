@@ -7,6 +7,7 @@ import CloudinaryUpload from '@/components/CloudinaryUpload';
 import AdminDashboardHeader from '@/components/AdminDashboardHeader';
 import AddCommitteeMemberModal from '@/components/AddCommitteeMemberModal';
 import { useGlobalLoading } from '@/contexts/LoadingContext';
+import AuthGuard from '@/components/AuthGuard';
 
 interface Committee {
   id: number;
@@ -133,9 +134,10 @@ export default function CommitteesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminDashboardHeader />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AuthGuard requireAuth={true} allowedRoles={[0]}>
+      <div className="min-h-screen bg-gray-50">
+        <AdminDashboardHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
@@ -382,7 +384,8 @@ export default function CommitteesPage() {
           onClose={() => setShowAddMemberModal(false)}
           onMemberAdded={fetchCommittees}
         />
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

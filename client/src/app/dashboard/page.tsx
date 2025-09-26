@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useGlobalLoading } from '@/contexts/LoadingContext';
+import AuthGuard from '@/components/AuthGuard';
 
 interface User {
   id: number;
@@ -135,24 +136,26 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <StudentHeader />
-      
-      <div className="pt-0">
-        <div className="w-full">
-          {/* Mobile View - Only Middle Column */}
-          <div className="block lg:hidden">
-            <MiddleColumn user={user} events={events} loading={loading} />
-          </div>
-          
-          {/* Desktop View - All Columns */}
-          <div className="hidden lg:grid grid-cols-12">
-            <LeftColumn user={user} />
-            <MiddleColumn user={user} events={events} loading={loading} />
-            <RightColumn newUsers={newUsers} />
+    <AuthGuard requireAuth={true} allowedRoles={[2]}>
+      <div className="min-h-screen bg-gray-100">
+        <StudentHeader />
+        
+        <div className="pt-0">
+          <div className="w-full">
+            {/* Mobile View - Only Middle Column */}
+            <div className="block lg:hidden">
+              <MiddleColumn user={user} events={events} loading={loading} />
+            </div>
+            
+            {/* Desktop View - All Columns */}
+            <div className="hidden lg:grid grid-cols-12">
+              <LeftColumn user={user} />
+              <MiddleColumn user={user} events={events} loading={loading} />
+              <RightColumn newUsers={newUsers} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

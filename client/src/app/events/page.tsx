@@ -7,6 +7,7 @@ import ViewEventsStudent from '@/components/ViewEventsStudent';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import AuthGuard from '@/components/AuthGuard';
 
 interface Event {
   id: number;
@@ -96,15 +97,17 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <StudentHeader />
-      <FloatingNavigation user={null} />
-      
-      <div className="pt-0">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <ViewEventsStudent events={events} loading={loading} />
+    <AuthGuard requireAuth={true} allowedRoles={[2]}>
+      <div className="min-h-screen bg-gray-100">
+        <StudentHeader />
+        <FloatingNavigation user={null} />
+        
+        <div className="pt-0">
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <ViewEventsStudent events={events} loading={loading} />
+          </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

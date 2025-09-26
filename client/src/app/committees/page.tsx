@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import StudentHeader from '@/components/StudentHeader';
 import CommitteesDisplay from '@/components/CommitteesDisplay';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function CommitteesPage() {
   const [loading, setLoading] = useState(true);
@@ -49,11 +50,13 @@ export default function CommitteesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <StudentHeader />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <CommitteesDisplay />
+    <AuthGuard requireAuth={true} allowedRoles={[2]}>
+      <div className="min-h-screen bg-gray-50">
+        <StudentHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <CommitteesDisplay />
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

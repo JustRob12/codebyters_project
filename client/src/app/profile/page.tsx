@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useGlobalLoading } from '@/contexts/LoadingContext';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -266,8 +267,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <StudentHeader />
+    <AuthGuard requireAuth={true} allowedRoles={[2]}>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <StudentHeader />
       
       <div className="pt-4 sm:pt-8">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
@@ -395,14 +397,14 @@ export default function ProfilePage() {
                       <span>Edit Profile</span>
                     </div>
                   </button>
-                  <button className="border-2 border-gray-200 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base">
+                  <Link href="/codex" className="border-2 border-gray-200 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base inline-block">
                     <div className="flex items-center justify-center space-x-2">
                       <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
-                      <span>Share Profile</span>
+                      <span>My Codex</span>
                     </div>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -616,6 +618,7 @@ export default function ProfilePage() {
         imageSrc={cropImageSrc}
         aspect={cropType === 'profile' ? 1 : 1200/460}
       />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
