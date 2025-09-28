@@ -1,32 +1,75 @@
 import { NextResponse } from 'next/server';
+import { XMLParser } from 'fast-xml-parser';
 
 export async function GET() {
   try {
-    // Fetch Daily.dev RSS feed server-side to avoid CORS issues
-    const response = await fetch('https://api.daily.dev/rss', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const xmlText = await response.text();
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+    console.log('Fetching Daily.dev RSS feed...');
     
-    const items = xmlDoc.querySelectorAll('item');
+    // Try multiple possible endpoints for Daily.dev RSS
+    const endpoints = [
+      'https://api.daily.dev/rss',
+      'https://daily.dev/rss',
+      'https://daily.dev/feed'
+    ];
+    
+    let xmlText = '';
+    let lastError = null;
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`Trying endpoint: ${endpoint}`);
+        const response = await fetch(endpoint, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+
+        console.log(`Response status for ${endpoint}:`, response.status);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const text = await response.text();
+        console.log(`XML text length for ${endpoint}:`, text.length);
+        
+        if (text && text.length > 0) {
+          xmlText = text;
+          console.log(`Successfully fetched RSS from ${endpoint}`);
+          break;
+        }
+      } catch (error) {
+        console.log(`Failed to fetch from ${endpoint}:`, error instanceof Error ? error.message : String(error));
+        lastError = error;
+        continue;
+      }
+    }
+    
+    // Check if we got any valid RSS content
+    if (!xmlText || xmlText.length === 0) {
+      console.log('All RSS endpoints failed, falling back to curated posts');
+      throw new Error('All RSS feeds are empty or unavailable');
+    }
+    
+    const parser = new XMLParser();
+    const xmlDoc = parser.parse(xmlText);
+    
+    const items = xmlDoc.rss?.channel?.item || [];
+    
+    // Check if no items found in RSS feed
+    if (!items || items.length === 0) {
+      throw new Error('No items found in RSS feed');
+    }
+    
     const posts: any[] = [];
     
-    items.forEach((item, index) => {
-      if (index < 5) { // Limit to 5 posts per day
-        const title = item.querySelector('title')?.textContent || '';
-        const description = item.querySelector('description')?.textContent || '';
-        const link = item.querySelector('link')?.textContent || '';
-        const pubDate = item.querySelector('pubDate')?.textContent || '';
-        const guid = item.querySelector('guid')?.textContent || '';
+    items.forEach((item: any, index: number) => {
+      if (index < 10) { // Limit to 10 posts per day
+        const title = item.title || '';
+        const description = item.description || '';
+        const link = item.link || '';
+        const pubDate = item.pubDate || '';
+        const guid = item.guid || '';
         
         // Extract image from description or use tech-related image
         const imgMatch = description.match(/<img[^>]+src="([^"]+)"/);
@@ -67,7 +110,7 @@ export async function GET() {
         
         // Extract tags from description
         const tagMatch = description.match(/tags?:\s*([^<]+)/i);
-        const tags = tagMatch ? tagMatch[1].split(',').map(tag => tag.trim()) : ['tech'];
+        const tags = tagMatch ? tagMatch[1].split(',').map((tag: string) => tag.trim()) : ['tech'];
         
         posts.push({
           id: guid || `post-${index}`,
@@ -86,13 +129,12 @@ export async function GET() {
     return NextResponse.json({ posts });
   } catch (error) {
     console.error('Error fetching Daily.dev posts:', error);
+    console.log('Falling back to curated posts due to RSS feed issues');
     
-    // Generate 5 new posts for today with 24-hour rotation
-    const today = new Date();
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+    // Generate randomized posts for fresh content every day
     
     const allPosts = [
-      // Day 1 posts
+      // Curated tech posts
       {
         id: 'day1-1',
         title: 'React 18: The Complete Guide to Concurrent Features',
@@ -102,8 +144,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
         author: 'React Team',
         tags: ['react', 'javascript', 'frontend'],
-        source: 'Daily.dev',
-        day: 1
+        source: 'Daily.dev'
       },
       {
         id: 'day1-2',
@@ -114,8 +155,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
         author: 'TypeScript Team',
         tags: ['typescript', 'javascript', 'programming'],
-        source: 'Daily.dev',
-        day: 1
+        source: 'Daily.dev'
       },
       {
         id: 'day1-3',
@@ -126,8 +166,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
         author: 'Vercel Team',
         tags: ['nextjs', 'react', 'fullstack'],
-        source: 'Daily.dev',
-        day: 1
+        source: 'Daily.dev'
       },
       {
         id: 'day1-4',
@@ -138,8 +177,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
         author: 'Node.js Foundation',
         tags: ['nodejs', 'backend', 'javascript'],
-        source: 'Daily.dev',
-        day: 1
+        source: 'Daily.dev'
       },
       {
         id: 'day1-5',
@@ -150,10 +188,63 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
         author: 'CSS Tricks',
         tags: ['css', 'frontend', 'layout'],
-        source: 'Daily.dev',
-        day: 1
+        source: 'Daily.dev'
       },
-      // Day 2 posts
+      {
+        id: 'day1-6',
+        title: 'JavaScript ES2024: Advanced Array Methods',
+        description: 'Explore the latest JavaScript array methods including flatMap, findLast, and other powerful array manipulation techniques for modern development. 📊',
+        url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array',
+        image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        author: 'MDN Team',
+        tags: ['javascript', 'arrays', 'es2024'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day1-7',
+        title: 'WebAssembly: High-Performance Web Apps',
+        description: 'Learn how to use WebAssembly to build high-performance web applications with near-native speed using C, C++, Rust, and other languages. ⚡',
+        url: 'https://webassembly.org/',
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
+        author: 'WebAssembly Team',
+        tags: ['webassembly', 'performance', 'web'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day1-8',
+        title: 'GraphQL: Modern API Development',
+        description: 'Master GraphQL for building flexible, efficient APIs with strong typing, real-time subscriptions, and powerful query capabilities. 🔗',
+        url: 'https://graphql.org/',
+        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
+        author: 'GraphQL Foundation',
+        tags: ['graphql', 'api', 'backend'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day1-9',
+        title: 'Progressive Web Apps: The Complete Guide',
+        description: 'Build Progressive Web Apps that work offline, send push notifications, and provide native app-like experiences on any device. 📱',
+        url: 'https://web.dev/progressive-web-apps/',
+        image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+        author: 'Web.dev Team',
+        tags: ['pwa', 'mobile', 'offline'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day1-10',
+        title: 'Microservices Architecture: Best Practices',
+        description: 'Learn how to design, implement, and scale microservices architectures with proper service communication, data management, and deployment strategies. 🏗️',
+        url: 'https://microservices.io/',
+        image: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
+        author: 'Microservices.io',
+        tags: ['microservices', 'architecture', 'scalability'],
+        source: 'Daily.dev'
+      },
       {
         id: 'day2-1',
         title: 'JavaScript ES2024: New Features You Should Know',
@@ -163,8 +254,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
         author: 'MDN Team',
         tags: ['javascript', 'es2024', 'web'],
-        source: 'Daily.dev',
-        day: 2
+        source: 'Daily.dev'
       },
       {
         id: 'day2-2',
@@ -175,8 +265,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
         author: 'Docker Team',
         tags: ['docker', 'devops', 'containers'],
-        source: 'Daily.dev',
-        day: 2
+        source: 'Daily.dev'
       },
       {
         id: 'day2-3',
@@ -187,8 +276,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
         author: 'GitHub Team',
         tags: ['github', 'ci-cd', 'automation'],
-        source: 'Daily.dev',
-        day: 2
+        source: 'Daily.dev'
       },
       {
         id: 'day2-4',
@@ -199,8 +287,7 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
         author: 'Web.dev Team',
         tags: ['performance', 'web-vitals', 'seo'],
-        source: 'Daily.dev',
-        day: 2
+        source: 'Daily.dev'
       },
       {
         id: 'day2-5',
@@ -211,14 +298,68 @@ export async function GET() {
         publishedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
         author: 'OpenAI Team',
         tags: ['ai', 'machine-learning', 'web-dev'],
-        source: 'Daily.dev',
-        day: 2
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day2-6',
+        title: 'Vue.js 3: Composition API Mastery',
+        description: 'Master Vue.js 3 Composition API with reactive refs, computed properties, and lifecycle hooks for building modern, scalable applications. 🌟',
+        url: 'https://vuejs.org/guide/composition-api/',
+        image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        author: 'Vue.js Team',
+        tags: ['vue', 'javascript', 'frontend'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day2-7',
+        title: 'MongoDB: NoSQL Database Design',
+        description: 'Learn MongoDB database design patterns, indexing strategies, and aggregation pipelines for building scalable NoSQL applications. 🍃',
+        url: 'https://www.mongodb.com/developer/',
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
+        author: 'MongoDB Team',
+        tags: ['mongodb', 'database', 'nosql'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day2-8',
+        title: 'Kubernetes: Container Orchestration',
+        description: 'Master Kubernetes for container orchestration, service mesh, and cloud-native application deployment at scale. ☸️',
+        url: 'https://kubernetes.io/docs/',
+        image: 'https://images.unsplash.com/photo-1605745341112-85968b19335a?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
+        author: 'Kubernetes Team',
+        tags: ['kubernetes', 'containers', 'devops'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day2-9',
+        title: 'Redis: In-Memory Data Structures',
+        description: 'Explore Redis for caching, session storage, real-time analytics, and high-performance data operations in modern applications. 🔴',
+        url: 'https://redis.io/docs/',
+        image: 'https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+        author: 'Redis Team',
+        tags: ['redis', 'caching', 'database'],
+        source: 'Daily.dev'
+      },
+      {
+        id: 'day2-10',
+        title: 'Elasticsearch: Search and Analytics',
+        description: 'Build powerful search and analytics solutions with Elasticsearch, including full-text search, aggregations, and real-time data processing. 🔍',
+        url: 'https://www.elastic.co/guide/',
+        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=400&fit=crop&crop=center',
+        publishedAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
+        author: 'Elastic Team',
+        tags: ['elasticsearch', 'search', 'analytics'],
+        source: 'Daily.dev'
       }
     ];
 
-    // Get posts for current day (cycles every 2 days)
-    const currentDay = (dayOfYear % 2) + 1;
-    const todaysPosts = allPosts.filter(post => post.day === currentDay);
+    // Randomize posts for fresh content every day
+    const shuffledPosts = [...allPosts].sort(() => Math.random() - 0.5);
+    const todaysPosts = shuffledPosts.slice(0, 10);
 
     return NextResponse.json({ posts: todaysPosts });
   }

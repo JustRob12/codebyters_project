@@ -46,7 +46,8 @@ export default function MyCodexPage() {
             color: {
               dark: '#000000',
               light: '#FFFFFF'
-            }
+            },
+            errorCorrectionLevel: 'H' // High error correction for better quality
           }, (error) => {
             if (error) {
               console.error('Error generating modal QR code:', error);
@@ -86,7 +87,8 @@ export default function MyCodexPage() {
             color: {
               dark: '#000000',
               light: '#FFFFFF'
-            }
+            },
+            errorCorrectionLevel: 'H' // High error correction for better quality
           }, (error) => {
             if (error) {
               console.error('Error generating QR code:', error);
@@ -154,57 +156,105 @@ export default function MyCodexPage() {
   const downloadIDCard = async () => {
     if (!idCardRef.current || !user) return;
 
-    setIsDownloading(true);
     try {
-      // Wait for all images to load completely
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Ensure all images are fully loaded
-      const images = idCardRef.current.querySelectorAll('img');
-      await Promise.all(Array.from(images).map(img => {
-        return new Promise(resolve => {
-          if (img.complete && img.naturalWidth > 0) {
-            resolve(true);
-          } else {
-            img.onload = () => resolve(true);
-            img.onerror = () => resolve(true);
-          }
-        });
-      }));
+      // Show loading state
+      const downloadButton = document.querySelector('[data-download-button]') as HTMLButtonElement;
+      if (downloadButton) {
+        downloadButton.disabled = true;
+        downloadButton.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div><span class="ml-2">Generating HD Image...</span>';
+      }
 
-      // No positioning adjustments needed for portrait layout
+      // Wait for all images to load
+      const images = idCardRef.current?.querySelectorAll('img');
+      if (images) {
+        await Promise.all(
+          Array.from(images).map(
+            (img) =>
+              new Promise((resolve) => {
+                if (img.complete) {
+                  resolve(null);
+                } else {
+                  img.onload = () => resolve(null);
+                  img.onerror = () => resolve(null);
+                }
+              })
+          )
+        );
+      }
 
-      // Capture the exact card as it appears on the page
+      // Add a small delay to ensure everything is rendered
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const canvas = await html2canvas(idCardRef.current, {
-        width: 336, // 3.5 inches at 96 DPI
-        height: 480, // 5 inches at 96 DPI
+        backgroundColor: '#ffffff', // Set white background instead of null
+        scale: 3, // High resolution scale
         useCORS: true,
         allowTaint: true,
-        logging: false,
-        backgroundColor: '#ffffff',
+        logging: true, // Enable logging to debug issues
+        imageTimeout: 30000, // Increase timeout further
+        removeContainer: false, // Keep container for better rendering
+        foreignObjectRendering: false, // Disable for better compatibility
+        onclone: (clonedDoc) => {
+          // Ensure all images maintain proper aspect ratios
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach(img => {
+            img.style.objectFit = 'cover';
+            img.style.objectPosition = 'center';
+            img.style.aspectRatio = '1/1';
+            img.style.width = '100%';
+            img.style.height = '100%';
+          });
+        }
+        // Remove explicit width/height to let html2canvas handle sizing
       });
-
-      // No styling restoration needed for portrait layout
-
-      // Convert canvas to blob for download with maximum quality
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
+      
+      // Convert to high-quality PNG
       const link = document.createElement('a');
-          link.download = `${user.first_name}_${user.last_name}_CODEX_ID_Card.png`;
-          link.href = url;
+      link.href = canvas.toDataURL('image/png', 1.0); // Maximum quality
+      link.download = `${user.first_name}_${user.last_name}_CODEX_ID_Card_HD.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        }
-        setIsDownloading(false);
-      }, 'image/png', 1.0); // Maximum quality PNG
 
+      // Verify the canvas has content
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+      const hasContent = imageData?.data.some(pixel => pixel !== 0);
+      
+      if (!hasContent) {
+        console.warn('Canvas appears empty, trying fallback method...');
+        // Try with simpler settings
+        const fallbackCanvas = await html2canvas(idCardRef.current, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: true
+        });
+        
+        const fallbackLink = document.createElement('a');
+        fallbackLink.href = fallbackCanvas.toDataURL('image/png', 1.0);
+        fallbackLink.download = `${user.first_name}_${user.last_name}_CODEX_ID_Card.png`;
+        document.body.appendChild(fallbackLink);
+        fallbackLink.click();
+        document.body.removeChild(fallbackLink);
+      }
+
+      // Reset button state
+      if (downloadButton) {
+        downloadButton.disabled = false;
+        downloadButton.innerHTML = '<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span className="ml-2">Download CODEX ID Card</span>';
+      }
     } catch (error) {
       console.error('Error downloading ID card:', error);
-      alert('Error downloading ID card. Please try again.');
-      setIsDownloading(false);
+      alert('Failed to download ID card. Please try again.');
+      
+      // Reset button state on error
+      const downloadButton = document.querySelector('[data-download-button]') as HTMLButtonElement;
+      if (downloadButton) {
+        downloadButton.disabled = false;
+        downloadButton.innerHTML = '<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span className="ml-2">Download CODEX ID Card</span>';
+      }
     }
   };
 
@@ -292,11 +342,14 @@ export default function MyCodexPage() {
                     alt={`${user.first_name} ${user.last_name}`}
                     width={128}
                     height={128}
-                    className="rounded-full object-cover w-full h-full"
+                    className="rounded-full w-full h-full"
                     style={{ 
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      objectPosition: 'center'
+                      objectPosition: 'center',
+                      width: '100%',
+                      height: '100%',
+                      aspectRatio: '1/1'
                     }}
                     unoptimized
                     priority
@@ -355,33 +408,34 @@ export default function MyCodexPage() {
         </div>
         
         {/* Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
+        <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-[#166534] hover:bg-[#14532d] text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2"
+            className="bg-[#166534] hover:bg-[#14532d] text-white text-sm font-medium py-2 px-4 rounded-md shadow-md transition-colors duration-200 flex items-center space-x-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
             </svg>
             <span>View Fullscreen</span>
           </button>
           
           <button
+            data-download-button
             onClick={downloadIDCard}
             disabled={isDownloading}
-            className={`${isDownloading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1a9b9b]'} bg-[#20B2AA] text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2`}
+            className={`${isDownloading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1a9b9b]'} bg-[#20B2AA] text-white text-sm font-medium py-2 px-4 rounded-md shadow-md transition-colors duration-200 flex items-center space-x-2 whitespace-nowrap`}
           >
             {isDownloading ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>Generating Card...</span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Generating...</span>
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span>Download CODEX ID Card</span>
+                <span>Download</span>
               </>
             )}
           </button>
@@ -432,11 +486,14 @@ export default function MyCodexPage() {
                       alt={`${user.first_name} ${user.last_name}`}
                           width={192}
                           height={192}
-                      className="rounded-full object-cover w-full h-full"
+                      className="rounded-full w-full h-full"
                           style={{ 
                             borderRadius: '50%',
                             objectFit: 'cover',
-                            objectPosition: 'center'
+                            objectPosition: 'center',
+                            width: '100%',
+                            height: '100%',
+                            aspectRatio: '1/1'
                           }}
                       unoptimized
                           priority

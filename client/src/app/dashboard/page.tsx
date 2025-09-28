@@ -34,10 +34,25 @@ interface Event {
   }>;
 }
 
+interface Post {
+  id: number;
+  title: string;
+  description: string;
+  content: string;
+  status: string;
+  created_at: string;
+  pictures: Array<{
+    id: number;
+    picture_url: string;
+    picture_order: number;
+  }>;
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [newUsers, setNewUsers] = useState<User[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
@@ -58,6 +73,7 @@ export default function Dashboard() {
         // Fetch other data only if authenticated
         await fetchNewUsers();
         await fetchEvents();
+        await fetchPosts();
       } else {
         setIsAuthenticated(false);
         router.push('/login');
@@ -120,6 +136,35 @@ export default function Dashboard() {
     }
   };
 
+  const fetchPosts = async () => {
+    try {
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          post_pictures (
+            id,
+            picture_url,
+            picture_order
+          )
+        `)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (postsError) throw postsError;
+
+      const postsWithPictures = postsData?.map(post => ({
+        ...post,
+        pictures: post.post_pictures || []
+      })) || [];
+
+      setPosts(postsWithPictures);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
+
   // Show loading while checking authentication
   if (loading) {
     return (
@@ -144,13 +189,13 @@ export default function Dashboard() {
           <div className="w-full">
             {/* Mobile View - Only Middle Column */}
             <div className="block lg:hidden">
-              <MiddleColumn user={user} events={events} loading={loading} />
+              <MiddleColumn user={user} events={events} posts={posts} loading={loading} />
             </div>
             
             {/* Desktop View - All Columns */}
             <div className="hidden lg:grid grid-cols-12">
               <LeftColumn user={user} />
-              <MiddleColumn user={user} events={events} loading={loading} />
+              <MiddleColumn user={user} events={events} posts={posts} loading={loading} />
               <RightColumn newUsers={newUsers} />
             </div>
           </div>
